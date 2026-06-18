@@ -123,7 +123,7 @@ npm run start
 ## Postman / API Client Testing Guide
 
 > [!TIP]
-> Kami telah menyertakan berkas konfigurasi Postman Collection [fleet-pulse.postman_collection.json](fleet-pulse.postman_collection.json) di folder root proyek ini. Anda bisa langsung mengimpor file ini ke Postman untuk menguji seluruh API secara instan.
+> We have included a pre-configured Postman Collection file [fleet-pulse.postman_collection.json](fleet-pulse.postman_collection.json) in the root directory of this project. You can import this file directly into Postman to test the entire API instantly.
 
 Below are the endpoints available to query or mutate the logistics system:
 
@@ -209,13 +209,13 @@ Below are the endpoints available to query or mutate the logistics system:
 
 ## Application Layout Preview
 
-Berikut adalah tampilan antarmuka (UI) dari panel manajemen FleetPulse:
+Below is the user interface (UI) preview of the FleetPulse management panel:
 
-### 1. Halaman Login
-![Halaman Login](img/login.png)
+### 1. Fleet Management Dashboard
+![Fleet Management Dashboard](img/fleet-management-dashboard.png)
 
-### 2. Dashboard Daftar Armada & Statistik
-![Dashboard Daftar Armada](img/dashboard.png)
+### 2. Fleet Statistics Dashboard
+![Fleet Statistics Dashboard](img/fleet-statistics-dashboard.png)
 
-### 3. Detail Telemetri & Timeline Pelacakan Armada
-![Detail Telemetri Armada](img/fleet-detail.png)
+### 3. Fleet Telemetry & Tracking Timeline
+![Fleet Telemetry & Tracking Timeline](img/fleet-telemetry-detail.png)
