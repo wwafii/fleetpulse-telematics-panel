@@ -1,0 +1,366 @@
+<%- include('partials/header') %>
+
+<!-- Breadcrumbs and Action -->
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div class="space-y-1">
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      <a href="/fleets" class="hover:text-blue-400 transition-all-300">Fleet Dashboard</a>
+      <i class="fa-solid fa-chevron-right text-[9px] text-slate-600"></i>
+      <span class="text-slate-300 font-mono"><%= fleet.license_plate %></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold tracking-tight text-white"><%= fleet.license_plate %> Details</h1>
+      <span class="px-2.5 py-0.5 rounded bg-slate-800 text-xs font-semibold text-slate-300 border border-slate-700/60"><%= fleet.vehicle_type %></span>
+    </div>
+  </div>
+  
+  <div class="flex items-center gap-2.5">
+    <a 
+      href="/fleets/<%= fleet.id %>/export" 
+      class="w-fit px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 transition-all-300 flex items-center gap-2"
+    >
+      <i class="fa-solid fa-file-csv text-sm"></i> Export Telemetry CSV
+    </a>
+    
+    <a 
+      href="/fleets" 
+      class="w-fit px-4 py-2 rounded-xl bg-slate-900 border border-slate-800/80 hover:border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition-all-300"
+    >
+      <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<!-- Primary Driver / Vehicle Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <!-- Status Card -->
+  <div class="p-5 rounded-2xl glass-panel relative overflow-hidden flex flex-col justify-between">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl"></div>
+    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-2">Operational Status</div>
+    <div class="my-1">
+      <% if (fleet.status === 'Active') { %>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Active (In Transit)
+        </span>
+      <% } else if (fleet.status === 'Maintenance') { %>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          In Maintenance
+        </span>
+      <% } else { %>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+          <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+          Inactive (Idle)
+        </span>
+      <% } %>
+    </div>
+    <span class="text-[10px] text-slate-500 mt-2 block">Last updated: <%= new Date(fleet.updated_at).toLocaleTimeString() %></span>
+  </div>
+
+  <!-- Fuel Level Card -->
+  <div class="p-5 rounded-2xl glass-panel relative overflow-hidden flex flex-col justify-between">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl"></div>
+    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Current Fuel Level</div>
+    <div>
+      <% if (fleet.trackingLogs && fleet.trackingLogs[0]) { %>
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-2xl font-bold text-white"><%= fleet.trackingLogs[0].fuel_level %></span>
+          <span class="text-sm text-slate-400 font-semibold">%</span>
+        </div>
+        <div class="w-full bg-slate-900 rounded-full h-1.5 mt-2 border border-slate-800/40">
+          <div 
+            class="h-1.5 rounded-full <%= fleet.trackingLogs[0].fuel_level < 30 ? 'bg-red-500' : fleet.trackingLogs[0].fuel_level < 60 ? 'bg-amber-500' : 'bg-emerald-500' %>" 
+            style="width: <%= fleet.trackingLogs[0].fuel_level %>%"
+          ></div>
+        </div>
+      <% } else { %>
+        <span class="text-sm font-semibold text-slate-500">No telemetry logs</span>
+      <% } %>
+    </div>
+    <span class="text-[10px] text-slate-500 mt-2 block">Capacity metric</span>
+  </div>
+
+  <!-- Temperature Card -->
+  <div class="p-5 rounded-2xl glass-panel relative overflow-hidden flex flex-col justify-between">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full blur-xl"></div>
+    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Cargo Temperature</div>
+    <div>
+      <% if (fleet.trackingLogs && fleet.trackingLogs[0]) { %>
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-2xl font-bold text-white"><%= fleet.trackingLogs[0].temperature.toFixed(1) %></span>
+          <span class="text-sm text-slate-400 font-semibold">&deg;C</span>
+        </div>
+        <span class="text-xs <%= fleet.trackingLogs[0].temperature < 8 ? 'text-blue-400' : 'text-slate-400' %> mt-2 block flex items-center gap-1">
+          <i class="fa-solid <%= fleet.trackingLogs[0].temperature < 8 ? 'fa-snowflake' : 'fa-temperature-half' %>"></i>
+          <%= fleet.trackingLogs[0].temperature < 8 ? 'Cold Chain Active' : 'Ambient Cargo' %>
+        </span>
+      <% } else { %>
+        <span class="text-sm font-semibold text-slate-500">No telemetry logs</span>
+      <% } %>
+    </div>
+    <span class="text-[10px] text-slate-500 mt-2 block">Sensory output</span>
+  </div>
+
+  <!-- Driver Card -->
+  <div class="p-5 rounded-2xl glass-panel relative overflow-hidden flex flex-col justify-between font-sans">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl"></div>
+    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Assigned Driver</div>
+    <div>
+      <p class="text-lg font-bold text-white truncate"><%= fleet.driver_name %></p>
+      <p class="text-[11px] text-slate-400 flex items-center gap-1.5 mt-1">
+        <i class="fa-solid fa-id-card text-slate-500"></i> Active logistics license
+      </p>
+    </div>
+    <span class="text-[10px] text-slate-500 mt-2 block">Primary Operator</span>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  
+  <!-- Left Side: Chronological Telemetry Logs timeline -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="rounded-2xl glass-panel p-6 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800/60 pb-4 mb-6">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2.5">
+            <i class="fa-solid fa-timeline text-indigo-500"></i>
+            Telematics Timeline
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Eagerly loaded top 10 most recent logs (ordered by reported timestamp DESC).</p>
+        </div>
+        
+        <!-- Total logs counter -->
+        <span class="text-xs text-slate-500 font-semibold bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">
+          <%= fleet.trackingLogs ? fleet.trackingLogs.length : 0 %> logs loaded
+        </span>
+      </div>
+
+      <!-- Timeline visual -->
+      <% if (!fleet.trackingLogs || fleet.trackingLogs.length === 0) { %>
+        <div class="text-center py-12 text-slate-500">
+          <i class="fa-solid fa-satellite-dish text-3xl mb-3 block animate-pulse"></i>
+          Waiting for telemetry connection... No tracking logs recorded yet.
+        </div>
+      <% } else { %>
+        <div class="relative pl-6 border-l-2 border-slate-800/80 space-y-8 py-2">
+          
+          <% fleet.trackingLogs.forEach((log, index) => { %>
+            <div class="relative">
+              
+              <!-- Indicator Dot -->
+              <span class="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-950 border-2 <%= log.alert ? 'border-red-500 shadow-md shadow-red-500/25' : index === 0 ? 'border-blue-500 shadow-md shadow-blue-500/25' : 'border-slate-800' %>">
+                <span class="h-1.5 w-1.5 rounded-full <%= log.alert ? 'bg-red-500' : index === 0 ? 'bg-blue-500 animate-pulse' : 'bg-slate-700' %>"></span>
+              </span>
+
+              <!-- Telemetry Item Details -->
+              <div class="bg-slate-900/35 rounded-2xl border border-slate-800/40 p-4 hover:border-slate-800 transition-all duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 font-semibold flex items-center gap-1">
+                      <i class="fa-solid fa-location-dot text-slate-500"></i>
+                      <%= log.current_location %>
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-[10px] text-slate-500 font-mono"><%= new Date(log.reported_at).toLocaleString() %></span>
+                    <form action="/tracking-logs/<%= log.id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this telemetry log?');" class="inline">
+                      <button type="submit" class="text-slate-500 hover:text-red-400 transition-all-300" title="Delete Log">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+
+                <!-- Metrics values -->
+                <div class="flex items-center gap-6 text-xs text-slate-400">
+                  <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-gas-pump text-slate-500"></i>
+                    Fuel: <strong class="text-slate-200"><%= log.fuel_level %>%</strong>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-temperature-half text-slate-500"></i>
+                    Temp: <strong class="text-slate-200"><%= log.temperature.toFixed(1) %>&deg;C</strong>
+                  </span>
+                </div>
+
+                <!-- Incident Alerts -->
+                <% if (log.alert) { %>
+                  <div class="mt-3.5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2.5 shadow shadow-red-500/5 animate-pulse">
+                    <i class="fa-solid fa-triangle-exclamation text-sm shrink-0"></i>
+                    <div>
+                      <p class="font-bold uppercase tracking-wider text-[10px]">Security Incident Triggered</p>
+                      <p class="text-red-300/80"><%= log.alert %></p>
+                    </div>
+                  </div>
+                <% } %>
+              </div>
+              
+            </div>
+          <% }) %>
+          
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+
+  <!-- Right Side: Forms (Telemetry Simulation & Metadata Editing) -->
+  <div class="space-y-6">
+    
+    <!-- Simulate IoT Telemetry Ingestion -->
+    <div class="rounded-2xl glass-panel p-6 shadow-2xl space-y-5 border border-slate-800/50">
+      <div>
+        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish text-emerald-500"></i>
+          Simulate IoT Telemetry
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Ping GPS and telemetry sensors to test fuel drop logic and status updates.</p>
+      </div>
+
+      <form action="/tracking-logs" method="POST" class="space-y-4">
+        <!-- Hidden Fleet ID -->
+        <input type="hidden" name="fleet_id" value="<%= fleet.id %>">
+
+        <!-- Coordinates / Address -->
+        <div>
+          <label for="current_location" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Current Location</label>
+          <input 
+            type="text" 
+            name="current_location" 
+            id="current_location" 
+            required 
+            placeholder="e.g. Cirebon Toll Road KM 200" 
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-blue-500/50 transition-all-300"
+          >
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Fuel Level -->
+          <div>
+            <label for="fuel_level" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Fuel Level (0-100)</label>
+            <input 
+              type="number" 
+              name="fuel_level" 
+              id="fuel_level" 
+              required 
+              min="0" 
+              max="100" 
+              placeholder="e.g. 50" 
+              class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-blue-500/50 transition-all-300 font-mono"
+            >
+          </div>
+
+          <!-- Temperature -->
+          <div>
+            <label for="temperature" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Temp (&deg;C)</label>
+            <input 
+              type="number" 
+              step="0.1" 
+              name="temperature" 
+              id="temperature" 
+              required 
+              placeholder="e.g. 4.2" 
+              class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-blue-500/50 transition-all-300 font-mono"
+            >
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-[10px] text-slate-400 flex items-start gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 shrink-0 mt-0.5"></i>
+          <p>
+            <strong>Theft Rule:</strong> Entering a fuel value <strong>30% lower</strong> than the current level (<%= fleet.trackingLogs && fleet.trackingLogs[0] ? fleet.trackingLogs[0].fuel_level : 0 %>%) will trigger the alert!
+          </p>
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all-300"
+        >
+          Send Telemetry Ping
+        </button>
+      </form>
+    </div>
+
+    <!-- Update Vehicle Details -->
+    <div class="rounded-2xl glass-panel p-6 shadow-2xl space-y-5 border border-slate-800/50">
+      <div>
+        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-blue-500"></i>
+          Update Vehicle Metadata
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Modify configuration parameters, assignments, or operational status.</p>
+      </div>
+
+      <form action="/fleets/<%= fleet.id %>/update" method="POST" class="space-y-4">
+        <!-- License Plate -->
+        <div>
+          <label for="edit_license_plate" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">License Plate</label>
+          <input 
+            type="text" 
+            name="license_plate" 
+            id="edit_license_plate" 
+            required 
+            value="<%= fleet.license_plate %>" 
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all-300 font-mono tracking-wider"
+          >
+        </div>
+
+        <!-- Vehicle Type -->
+        <div>
+          <label for="edit_vehicle_type" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Vehicle Type</label>
+          <select 
+            name="vehicle_type" 
+            id="edit_vehicle_type" 
+            required 
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all-300"
+          >
+            <option value="Wingbox" class="bg-slate-950 text-slate-200" <%= fleet.vehicle_type === 'Wingbox' ? 'selected' : '' %>>Wingbox</option>
+            <option value="Blind Van" class="bg-slate-950 text-slate-200" <%= fleet.vehicle_type === 'Blind Van' ? 'selected' : '' %>>Blind Van</option>
+            <option value="Colt Diesel" class="bg-slate-950 text-slate-200" <%= fleet.vehicle_type === 'Colt Diesel' ? 'selected' : '' %>>Colt Diesel</option>
+          </select>
+        </div>
+
+        <!-- Driver Name -->
+        <div>
+          <label for="edit_driver_name" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Driver Name</label>
+          <input 
+            type="text" 
+            name="driver_name" 
+            id="edit_driver_name" 
+            required 
+            value="<%= fleet.driver_name %>" 
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all-300"
+          >
+        </div>
+
+        <!-- Operational Status -->
+        <div>
+          <label for="edit_status" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Operational Status</label>
+          <select 
+            name="status" 
+            id="edit_status" 
+            required 
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-950/40 border border-slate-850 text-xs text-white focus:outline-none focus:border-blue-500/50 transition-all-300"
+          >
+            <option value="Active" class="bg-slate-950 text-slate-200" <%= fleet.status === 'Active' ? 'selected' : '' %>>Active (In Transit)</option>
+            <option value="Maintenance" class="bg-slate-950 text-slate-200" <%= fleet.status === 'Maintenance' ? 'selected' : '' %>>In Maintenance</option>
+            <option value="Inactive" class="bg-slate-950 text-slate-200" <%= fleet.status === 'Inactive' ? 'selected' : '' %>>Inactive (Idle)</option>
+          </select>
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all-300"
+        >
+          Save Configuration
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('partials/footer') %>
